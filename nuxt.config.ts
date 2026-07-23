@@ -14,6 +14,8 @@ export default defineNuxtConfig({
     public: {
       pickupAddress: process.env.PICKUP_ADDRESS,
       pickupHours: process.env.PICKUP_HOURS,
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
     },
   },
 });
