@@ -10,7 +10,9 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   runtimeConfig: {
-    // server only
+    // The private keys which are only available within server-side
+
+    // Keys within public, will be also exposed to the client-side
     public: {
       pickupAddress: process.env.PICKUP_ADDRESS,
       pickupHours: process.env.PICKUP_HOURS,

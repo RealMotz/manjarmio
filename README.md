@@ -18,3 +18,14 @@ Build for production with:
 ```bash
 npm run build
 ```
+
+## Run with Docker
+
+Create a `.env` file as described above, then build and start the production
+server:
+
+```bash
+docker compose up --build
+```
+
+The storefront will be available at [http://localhost:3000](http://localhost:3000).
