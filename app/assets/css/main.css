@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --espresso: #2c1810;
+  --mascarpone: #f5f0e8;
+  --cocoa: #8b6914;
+  --saffron: #d4a017;
+  --botanical: #1a3c2a;
+}
+
+@theme inline {
+  --color-espresso: var(--espresso);
+  --color-mascarpone: var(--mascarpone);
+  --color-cocoa: var(--cocoa);
+  --color-saffron: var(--saffron);
+  --color-botanical: var(--botanical);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+body {
+  background: var(--mascarpone);
+  color: var(--espresso);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+.strata-divider {
+  height: 6px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--mascarpone) 0px,
+    var(--mascarpone) 2px,
+    #c4a882 2px,
+    #c4a882 3px,
+    #6b4423 3px,
+    #6b4423 4px,
+    var(--espresso) 4px,
+    var(--espresso) 6px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
