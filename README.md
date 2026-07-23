@@ -1,75 +1,20 @@
-# Nuxt Minimal Starter
+# Manjarmio
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Manjarmio is an online storefront for handcrafted tiramisu in Cali, Colombia. Customers can explore the catalogue, build a cart, choose pickup or delivery, and see delivery fees for active service zones.
 
-## Setup
+Data is served from Supabase. The checkout experience is ready for a future Wompi payment integration; payments are not processed yet.
 
-Make sure to install dependencies:
+## Run locally
+
+Create a `.env` file with `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`. `PICKUP_ADDRESS` and `PICKUP_HOURS` are optional.
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
+Build for production with:
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
 ```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
