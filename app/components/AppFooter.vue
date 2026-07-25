@@ -2,7 +2,8 @@
 
 const config = useRuntimeConfig();
 const pickupAddress = config.public.pickupAddress ?? "Cali, Valle del Cauca";
-const pickupHours = config.public.pickupHours ?? "Lun-Sáb 10:00-18:00";
+const pickupAddress2 = config.public.pickupAddress2 ?? "";
+const pickupHours = config.public.pickupHours ?? "";
 </script>
 
 <template>
@@ -13,7 +14,7 @@ const pickupHours = config.public.pickupHours ?? "Lun-Sáb 10:00-18:00";
                 <div>
                     <p class="font-display text-xl font-semibold">Manjarmio</p>
                     <p class="mt-2 text-sm text-mascarpone/70">
-                        Tiramisú artesanal hecho en Cali. Cinco sabores permanentes y
+                        Tiramisú artesanal hecho en Cali. Cuatro sabores permanentes y
                         ediciones de temporada.
                     </p>
                 </div>
@@ -22,6 +23,7 @@ const pickupHours = config.public.pickupHours ?? "Lun-Sáb 10:00-18:00";
                         Recogida
                     </p>
                     <p class="mt-2 text-sm text-mascarpone/80">{{ pickupAddress }}</p>
+                    <p class="mt-2 text-sm text-mascarpone/80">{{ pickupAddress2 }}</p>
                     <p class="mt-1 text-sm text-mascarpone/60">{{ pickupHours }}</p>
                 </div>
                 <div>
@@ -29,7 +31,7 @@ const pickupHours = config.public.pickupHours ?? "Lun-Sáb 10:00-18:00";
                         Pagos
                     </p>
                     <p class="mt-2 text-sm text-mascarpone/80">
-                        Nequi, transferencia bancaria o efectivo al recibir.
+                        Nequi, llave o transferencia bancaria.
                     </p>
                 </div>
             </div>

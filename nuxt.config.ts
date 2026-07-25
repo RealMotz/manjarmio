@@ -15,6 +15,7 @@ export default defineNuxtConfig({
     // Keys within public, will be also exposed to the client-side
     public: {
       pickupAddress: process.env.PICKUP_ADDRESS,
+      pickupAddress2: process.env.PICKUP_ADDRESS2,
       pickupHours: process.env.PICKUP_HOURS,
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
