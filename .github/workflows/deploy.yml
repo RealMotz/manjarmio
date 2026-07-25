@@ -46,8 +46,8 @@ jobs:
                 tags: ${{ steps.meta.outputs.tags }}
                 labels: ${{ steps.meta.outputs.labels }}
 
-            - name: Deploy on DigitalOcean
-              uses: appleboy/ssh-action@1.2.5
+            - name: SSH Remote Commands
+              uses: appleboy/ssh-action@v1.2.5
               with:
                 host: ${{ secrets.DROPLET_HOST }}
                 username: ${{ secrets.DROPLET_USER }}
