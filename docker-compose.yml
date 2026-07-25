@@ -1,5 +1,6 @@
 services:
   app:
+    image: ghcr.io/realmotz/manjarmio:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,11 +9,11 @@ services:
     env_file:
       - .env
     environment:
-      HOST: 0.0.0.0
-      PORT: 3000
+      NITRO_HOST: 0.0.0.0
+      NITRO_PORT: 3000
       NODE_ENV: production
       NUXT_PUBLIC_PICKUP_ADDRESS: ${PICKUP_ADDRESS:-}
       NUXT_PUBLIC_PICKUP_HOURS: ${PICKUP_HOURS:-}
       NUXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
       NUXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
-    restart: unless-stopped
+    restart: always
