@@ -6,13 +6,17 @@ export type Product = {
   price_cents: number | string;
   image_url?: string | null;
   is_seasonal?: boolean | string;
+  is_active: boolean;
 };
 
 export function useProducts() {
   const { $supabase } = useNuxtApp();
 
   const getAll = async () => {
-    const { data, error } = await $supabase.from("products").select("*");
+    const { data, error } = await $supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true);
 
     if (error) throw error;
 

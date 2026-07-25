@@ -25,8 +25,8 @@ const addToCart = () => {
 
 <template>
     <article
-        :class="`group flex flex-col overflow-hidden rounded-2xl border border-espresso/10 bg-white transition-shadow hover:shadow-lg ${props.featured ? 'ring-1 ring-saffron/30' : ''}`">
-        <NuxtLink :to="`/productos/${props.product.slug}`" class="block">
+        :class="`group flex flex-col overflow-hidden rounded-3xl border border-espresso/10 bg-white transition-shadow hover:shadow-lg ${props.featured ? 'ring-1 ring-saffron/30' : ''}`">
+        <NuxtLink :to="`/catalogo/${props.product.slug}`" class="block">
             <div class="relative aspect-4/3 bg-linear-to-br from-mascarpone to-espresso/5">
                 <img v-if="props.product.image_url" :src="props.product.image_url" :alt="props.product.name"
                     class="h-full w-full object-cover" />
@@ -43,7 +43,7 @@ const addToCart = () => {
         </NuxtLink>
 
         <div class="flex flex-1 flex-col p-5">
-            <NuxtLink :to="`/productos/${product.slug}`">
+            <NuxtLink :to="`/catalogo/${product.slug}`">
                 <h3 class="font-display text-xl font-semibold text-espresso group-hover:text-cocoa">
                     {{ props.product.name }}
                 </h3>

@@ -16,6 +16,8 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
 
 <template>
     <section class="relative overflow-hidden bg-espresso text-mascarpone">
+        <div class="absolute inset-0 bg-[url('/images/patron.png')] bg-repeat opacity-15 bg-size-[180px_auto]" />
+        <div class="absolute inset-0 bg-linear-to-b from-espresso/90 via-espresso/5 to-espresso" />
         <div class="absolute inset-0 opacity-20">
             <div class="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-saffron blur-3xl" />
             <div class="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-botanical blur-3xl" />
@@ -33,7 +35,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
                 Manjarmio le pone.
             </p>
             <div class="mt-10 flex flex-wrap gap-4">
-                <a href="/productos"
+                <a href="/catalogo"
                     class="rounded-full bg-saffron px-8 py-3 text-sm font-semibold text-espresso transition-colors hover:bg-saffron/90">
                     Ver sabores
                 </a>
@@ -56,7 +58,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
                     Los favoritos de Cali
                 </h2>
             </div>
-            <a href="/productos" class="hidden text-sm font-medium text-cocoa hover:underline sm:block">
+            <a href="/catalogo" class="hidden text-sm font-medium text-cocoa hover:underline sm:block">
                 Ver todos →
             </a>
         </div>
@@ -69,7 +71,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
         <div class="mx-auto max-w-6xl px-4 sm:px-6">
             <StrataDivider />
             <div class="mt-12">
-                <p class="font-mono text-xs uppercase tracking-widest text-saffron">
+                <p class="font-mono text-xs uppercase tracking-widest text-cocoa">
                     Edición limitada
                 </p>
                 <h2 class="mt-2 font-display text-3xl font-semibold text-espresso">
@@ -89,23 +91,23 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
     <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div class="grid gap-8 rounded-3xl bg-botanical p-8 text-mascarpone sm:grid-cols-3 sm:p-12">
             <div>
-                <p class="font-mono text-3xl font-semibold text-saffron">5+</p>
+                <p class="font-mono text-3xl font-semibold text-mascarpone">4</p>
                 <p class="mt-1 text-sm text-mascarpone/70">
                     Sabores permanentes
                 </p>
             </div>
             <div>
-                <p class="font-mono text-3xl font-semibold text-saffron">
+                <p class="font-mono text-3xl font-semibold text-mascarpone">
                     100%
                 </p>
                 <p class="mt-1 text-sm text-mascarpone/70">Artesanal en Cali</p>
             </div>
             <div>
-                <p class="font-mono text-3xl font-semibold text-saffron">
+                <p class="font-mono text-3xl font-semibold text-mascarpone">
                     Nequi
                 </p>
                 <p class="mt-1 text-sm text-mascarpone/70">
-                    Transferencia · Efectivo
+                    Transferencia · Llave
                 </p>
             </div>
         </div>

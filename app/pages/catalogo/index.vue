@@ -22,7 +22,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
             Nuestros sabores
         </h1>
         <p class="mt-3 max-w-xl text-espresso/60">
-            Porciones individuales de 150 g. Elige tu favorito y agrégalo al
+            Porciones individuales de 200 g. Elige tu favorito y agrégalo al
             carrito.
         </p>
 
@@ -36,7 +36,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
                 <StrataDivider />
             </div>
             <div class="mt-12">
-                <p class="font-mono text-xs uppercase tracking-widest text-saffron">
+                <p class="font-mono text-xs uppercase tracking-widest text-cocoa">
                     Temporada
                 </p>
                 <h2 class="mt-2 font-display text-2xl font-semibold text-espresso">

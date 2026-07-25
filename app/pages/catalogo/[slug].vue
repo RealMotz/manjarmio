@@ -45,7 +45,7 @@ const addToCart = () => {
 
 <template>
     <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <a href="/productos" class="text-sm font-medium text-cocoa hover:underline">
+        <a href="/catalogo" class="text-sm font-medium text-cocoa hover:underline">
             ← Volver al catálogo
         </a>
 
