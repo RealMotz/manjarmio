@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatCOP } from "~/utils/currency";
+import { buildWhatsappLink, buildWhatsappOrderMessage, type WhatsappFulfillmentDetails } from "~/utils/whatsapp";
 
 type Fulfillment = "pickup" | "delivery";
 
@@ -114,17 +115,60 @@ const preparePayment = async () => {
     updated_at: new Date().toISOString(),
   }
 
-  // Create order
-  const { error } = await orderApi.createOrder(order);
-  if (error) {
-    checkoutMessage.value = error.message()
-    return
+  let createdOrder;
+  try {
+    createdOrder = await orderApi.createOrder(order);
+  } catch (err) {
+    checkoutMessage.value =
+      err instanceof Error ? err.message : "No pudimos registrar tu pedido. Intenta de nuevo.";
+    return;
   }
 
-  checkoutMessage.value =
-    "Tu pedido está listo para pagar. Continua con el proceso en Whatsup";
+  if (!config.public.whatsappBusinessNumber) {
+    checkoutMessage.value = "No pudimos abrir WhatsApp, contáctanos directamente.";
+    return;
+  }
 
-  // TODO: Format all information collected and send a message to manjarmio whatsup business account
+  const fulfillmentDetails: WhatsappFulfillmentDetails =
+    fulfillment.value === "pickup"
+      ? {
+        type: "pickup",
+        address: config.public.pickupAddress ?? null,
+        address2: config.public.pickupAddress2 ?? null,
+        hours: config.public.pickupHours ?? null,
+      }
+      : {
+        type: "delivery",
+        zoneName: selectedZone.value?.name ?? "",
+        address: address.value,
+        dateLabel: deliveryDateOptions.value.find((option) => option.value === deliveryDate.value)?.label ?? deliveryDate.value,
+        timeLabel: deliveryTimeOptions.value.find((option) => option.value === deliveryTime.value)?.label ?? deliveryTime.value,
+      };
+
+  const message = buildWhatsappOrderMessage({
+    orderId: createdOrder.id,
+    items: items.value.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitPriceCents: item.price_cents,
+      lineTotalCents: item.price_cents * item.quantity,
+    })),
+    fulfillment: fulfillmentDetails,
+    subtotalCents: subtotalCents.value,
+    deliveryFeeCents: deliveryFeeCents.value,
+    totalCents: totalCents.value,
+    contactName: contactName.value,
+    phone: phone.value,
+    email: email.value,
+    notes: notes.value || undefined,
+  });
+
+  const whatsappUrl = buildWhatsappLink(config.public.whatsappBusinessNumber, message);
+  window.open(whatsappUrl, "_blank", "noopener");
+
+  checkoutMessage.value =
+    "Tu pedido está listo para pagar. Continua con el proceso en Whatsapp";
+
   clearCart()
 };
 
@@ -183,7 +227,7 @@ const preparePayment = async () => {
                       :aria-label="`Quitar una unidad de ${item.name}`"
                       @click="updateQuantity(item.id, item.quantity - 1)">−</button>
                     <span class="grid h-8 min-w-8 place-items-center font-mono text-xs text-espresso">{{ item.quantity
-                    }}</span>
+                      }}</span>
                     <button type="button"
                       class="grid h-8 w-8 place-items-center text-lg leading-none text-espresso/70 hover:text-espresso"
                       :aria-label="`Añadir una unidad de ${item.name}`"

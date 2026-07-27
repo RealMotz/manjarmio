@@ -21,6 +21,7 @@ export default defineNuxtConfig({
       workingHoursEnd: process.env.WORKING_HOURS_END ?? "15:00",
       deliveryHoursStart: process.env.DELIVERY_HOURS_START ?? "09:00",
       deliveryHoursEnd: process.env.DELIVERY_HOURS_END ?? "18:00",
+      whatsappBusinessNumber: process.env.WHATSAPP_BUSINESS_NUMBER,
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
     },
