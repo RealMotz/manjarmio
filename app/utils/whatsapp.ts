@@ -108,3 +108,18 @@ export function buildWhatsappLink(
     ? `whatsapp://send?phone=${digitsOnly}&text=${encodedMessage}`
     : `https://web.whatsapp.com/send?phone=${digitsOnly}&text=${encodedMessage}`;
 }
+
+export function openWhatsapp(url: string) {
+  if (url.startsWith("whatsapp://")) {
+    window.location.href = url;
+    return;
+  }
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

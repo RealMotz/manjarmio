@@ -1,49 +1,33 @@
 <script setup lang="ts">
 import { formatCOP } from "~/utils/currency";
-import { buildWhatsappLink, buildWhatsappOrderMessage, type WhatsappFulfillmentDetails } from "~/utils/whatsapp";
-
-type Fulfillment = "pickup" | "delivery";
 
 const config = useRuntimeConfig();
-const {
-  items,
-  hasHydrated,
-  subtotalCents,
-  updateQuantity,
-  removeItem,
-  clearCart,
-} = useCart();
-const deliveryZonesApi = useDeliveryZones();
-const deliverySchedule = useDeliverySchedule();
+const { items, hasHydrated, subtotalCents, updateQuantity, removeItem } = useCart();
 
 const {
-  data: deliveryZones,
-  pending: deliveryZonesPending,
-  error: deliveryZonesError,
-} = await useAsyncData("active-delivery-zones", () => deliveryZonesApi.getAll());
-const activeZones = deliveryZones.value?.filter((zone) => zone.is_active == true);
-const pickup = deliveryZones.value?.at(0);
+  deliveryZonesPending,
+  deliveryZonesError,
+  activeZones,
+  fulfillment,
+  selectedZoneId,
+  contactName,
+  phone,
+  email,
+  address,
+  notes,
+  deliveryDate,
+  deliveryTime,
+  selectedZone,
+  deliveryFeeCents,
+  totalCents,
+  requiresZone,
+  isCheckoutReady,
+  deliveryDateOptions,
+  deliveryTimeOptions,
+  workingHoursEndLabel,
+} = await useCheckoutSummary();
 
-const fulfillment = ref<Fulfillment>("pickup");
-const selectedZoneId = ref<string | null>(null);
 const checkoutMessage = ref("");
-const contactName = ref("");
-const phone = ref("");
-const email = ref("");
-const address = ref("");
-const notes = ref("");
-const deliveryDate = ref("");
-const deliveryTime = ref("");
-
-const deliveryDateOptions = computed(() => deliverySchedule.getDeliveryDateOptions());
-const deliveryTimeOptions = deliverySchedule.deliveryTimeSlots;
-const workingHoursCutoffLabel = computed(() => {
-  const { hours, minutes } = deliverySchedule.workingHours.end;
-  const reference = new Date();
-  reference.setHours(hours, minutes, 0, 0);
-  return reference.toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
-});
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 watch(
   deliveryDateOptions,
@@ -65,113 +49,18 @@ watch(
   { immediate: true },
 );
 
-const selectedZone = computed(
-  () => deliveryZones.value?.find((zone) => zone.id === selectedZoneId.value) ?? null,
-);
-const deliveryFeeCents = computed(() =>
-  fulfillment.value === "delivery" ? selectedZone.value?.fee_cents ?? 0 : 0,
-);
-const totalCents = computed(() => subtotalCents.value + deliveryFeeCents.value);
-const requiresZone = computed(
-  () => fulfillment.value === "delivery" && (activeZones?.length ?? 0) > 0,
-);
-const isCheckoutReady = computed(
-  () =>
-    items.value.length > 0 &&
-    contactName.value.trim().length > 1 &&
-    phone.value.trim().length > 5 &&
-    emailPattern.test(email.value.trim()) &&
-    (fulfillment.value === "pickup" ||
-      (Boolean(selectedZone.value) &&
-        address.value.trim().length > 4 &&
-        Boolean(deliveryDate.value) &&
-        Boolean(deliveryTime.value))),
-);
-
 watch(fulfillment, () => {
   checkoutMessage.value = "";
 });
 
-const orderApi = useOrders()
-const preparePayment = async () => {
-  if (!isCheckoutReady.value) {
+const goToConfirmation = async () => {
+  if (items.value.length === 0 || !isCheckoutReady.value) {
     checkoutMessage.value = "Completa tus datos y la forma de recibir el pedido para continuar.";
     return;
   }
 
-  const order: CartOrder = {
-    address: address.value,
-    delivery_fee_cents: deliveryFeeCents.value,
-    delivery_notes: notes.value,
-    email: email.value,
-    fulfillment_type: fulfillment.value,
-    name: contactName.value,
-    order_status: "new",
-    payment_status: "pending",
-    phone: phone.value,
-    total_cents: totalCents.value,
-    zone_id: fulfillment.value == "delivery" ? selectedZone.value?.id : pickup?.id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-
-  let createdOrder;
-  try {
-    createdOrder = await orderApi.createOrder(order);
-  } catch (err) {
-    checkoutMessage.value =
-      err instanceof Error ? err.message : "No pudimos registrar tu pedido. Intenta de nuevo.";
-    return;
-  }
-
-  if (!config.public.whatsappBusinessNumber) {
-    checkoutMessage.value = "No pudimos abrir WhatsApp, contáctanos directamente.";
-    return;
-  }
-
-  const fulfillmentDetails: WhatsappFulfillmentDetails =
-    fulfillment.value === "pickup"
-      ? {
-        type: "pickup",
-        address: config.public.pickupAddress ?? null,
-        address2: config.public.pickupAddress2 ?? null,
-        hours: config.public.pickupHours ?? null,
-      }
-      : {
-        type: "delivery",
-        zoneName: selectedZone.value?.name ?? "",
-        address: address.value,
-        dateLabel: deliveryDateOptions.value.find((option) => option.value === deliveryDate.value)?.label ?? deliveryDate.value,
-        timeLabel: deliveryTimeOptions.value.find((option) => option.value === deliveryTime.value)?.label ?? deliveryTime.value,
-      };
-
-  const message = buildWhatsappOrderMessage({
-    orderId: createdOrder.id,
-    items: items.value.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      unitPriceCents: item.price_cents,
-      lineTotalCents: item.price_cents * item.quantity,
-    })),
-    fulfillment: fulfillmentDetails,
-    subtotalCents: subtotalCents.value,
-    deliveryFeeCents: deliveryFeeCents.value,
-    totalCents: totalCents.value,
-    contactName: contactName.value,
-    phone: phone.value,
-    email: email.value,
-    notes: notes.value || undefined,
-  });
-
-  const whatsappUrl = buildWhatsappLink(config.public.whatsappBusinessNumber, message);
-  window.open(whatsappUrl, "_blank", "noopener");
-
-  checkoutMessage.value =
-    "Tu pedido está listo para pagar. Continua con el proceso en Whatsapp";
-
-  clearCart()
+  await navigateTo("/carrito/confirmar");
 };
-
 </script>
 
 <template>
@@ -244,7 +133,7 @@ const preparePayment = async () => {
           </ul>
         </section>
 
-        <form class="space-y-8" @submit.prevent="preparePayment">
+        <form class="space-y-8" @submit.prevent="goToConfirmation">
           <section aria-labelledby="delivery-title">
             <div class="flex items-baseline justify-between gap-4">
               <h2 id="delivery-title" class="font-display text-2xl font-semibold text-espresso">Cómo lo recibes</h2>
@@ -338,7 +227,7 @@ const preparePayment = async () => {
                 </select>
               </label>
             </div>
-            <p class="mt-2 text-xs text-espresso/55">Los pedidos hechos antes de las {{ workingHoursCutoffLabel }} se
+            <p class="mt-2 text-xs text-espresso/55">Los pedidos hechos antes de las {{ workingHoursEndLabel }} se
               entregan al día siguiente; después de esa hora, la entrega más pronta es dos días después.</p>
             <label class="mt-4 block text-sm font-semibold text-espresso">Notas para tu pedido <span
                 class="font-normal text-espresso/45">(opcional)</span>
@@ -351,7 +240,7 @@ const preparePayment = async () => {
           <button type="submit"
             class="w-full rounded-full bg-espresso px-6 py-4 text-sm font-semibold text-mascarpone transition-colors hover:bg-cocoa focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cocoa disabled:cursor-not-allowed disabled:bg-espresso/40"
             :disabled="items.length === 0">
-            Continuar al pago
+            Confirmar pedido
           </button>
           <p v-if="checkoutMessage" class="rounded-2xl bg-saffron/20 px-4 py-3 text-sm leading-relaxed text-espresso"
             aria-live="polite">{{ checkoutMessage }}</p>
@@ -376,8 +265,8 @@ const preparePayment = async () => {
           </div>
         </div>
         <div class="strata-divider" />
-        <p class="px-6 py-4 text-xs leading-relaxed text-mascarpone/65">El pago seguro con Wompi se conectará en el
-          siguiente paso.</p>
+        <p class="px-6 py-4 text-xs leading-relaxed text-mascarpone/65">Coordinamos el pago por WhatsApp directamente
+          con Manjarmío en el siguiente paso.</p>
       </aside>
     </div>
 
