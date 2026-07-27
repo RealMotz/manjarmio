@@ -19,6 +19,7 @@ export type CartOrder = {
   total_cents: number;
   updated_at: string;
   zone_id: string | undefined;
+  items: CartItem[];
 };
 
 export function useOrders() {
@@ -29,11 +30,22 @@ export function useOrders() {
     }
 
     const { $supabase } = useNuxtApp();
-    const { data, error } = await $supabase
-      .from("orders")
-      .insert({ ...order, user_id: user.value.id })
-      .select()
-      .single();
+    const { data, error } = await $supabase.rpc("create_order", {
+      p_email: order.email,
+      p_name: order.name,
+      p_phone: order.phone,
+      p_fulfillment_type: order.fulfillment_type,
+      p_address: order.address,
+      p_delivery_notes: order.delivery_notes,
+      p_delivery_fee_cents: order.delivery_fee_cents,
+      p_zone_id: order.zone_id,
+      p_items: order.items.map((i) => ({
+        product_id: i.id,
+        product_name: i.name,
+        quantity: i.quantity,
+        unit_price_cents: i.price_cents,
+      })),
+    });
 
     if (error) throw error;
 

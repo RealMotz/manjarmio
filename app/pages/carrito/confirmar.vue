@@ -33,18 +33,18 @@ if (items.value.length === 0 || !isCheckoutReady.value) {
 const fulfillmentDetails = computed<WhatsappFulfillmentDetails>(() =>
   fulfillment.value === "pickup"
     ? {
-        type: "pickup",
-        address: config.public.pickupAddress ?? null,
-        address2: config.public.pickupAddress2 ?? null,
-        hours: config.public.pickupHours ?? null,
-      }
+      type: "pickup",
+      address: config.public.pickupAddress ?? null,
+      address2: config.public.pickupAddress2 ?? null,
+      hours: config.public.pickupHours ?? null,
+    }
     : {
-        type: "delivery",
-        zoneName: selectedZone.value?.name ?? "",
-        address: address.value,
-        dateLabel: deliveryDateOptions.value.find((option) => option.value === deliveryDate.value)?.label ?? deliveryDate.value,
-        timeLabel: deliveryTimeOptions.value.find((option) => option.value === deliveryTime.value)?.label ?? deliveryTime.value,
-      },
+      type: "delivery",
+      zoneName: selectedZone.value?.name ?? "",
+      address: address.value,
+      dateLabel: deliveryDateOptions.value.find((option) => option.value === deliveryDate.value)?.label ?? deliveryDate.value,
+      timeLabel: deliveryTimeOptions.value.find((option) => option.value === deliveryTime.value)?.label ?? deliveryTime.value,
+    },
 );
 
 const orderApi = useOrders();
@@ -80,6 +80,7 @@ const confirmOrder = async () => {
     zone_id: fulfillment.value === "delivery" ? selectedZone.value?.id : pickup?.id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    items: items.value,
   };
 
   let createdOrder;
@@ -177,7 +178,8 @@ const confirmOrder = async () => {
         class="rounded-3xl border border-espresso/10 bg-espresso p-6 text-mascarpone sm:p-7">
         <h2 id="summary-total-title" class="font-mono text-[10px] uppercase tracking-[0.22em] text-saffron">Resumen</h2>
         <div class="mt-4 space-y-2 text-sm text-mascarpone/75">
-          <div class="flex justify-between gap-4"><span>Productos</span><span>{{ formatCOP(subtotalCents) }}</span></div>
+          <div class="flex justify-between gap-4"><span>Productos</span><span>{{ formatCOP(subtotalCents) }}</span>
+          </div>
           <div class="flex justify-between gap-4">
             <span>{{ fulfillment === 'pickup' ? 'Recogida' : 'Envío' }}</span>
             <span>{{ fulfillment === 'pickup' ? 'Sin costo' : formatCOP(deliveryFeeCents) }}</span>
@@ -223,8 +225,7 @@ const confirmOrder = async () => {
         class="inline-flex rounded-full bg-espresso px-6 py-3 text-sm font-semibold text-mascarpone transition-colors hover:bg-cocoa">
         Abrir WhatsApp de nuevo
       </button>
-      <NuxtLink to="/catalogo"
-        class="block text-sm font-semibold text-cocoa underline-offset-4 hover:underline">
+      <NuxtLink to="/catalogo" class="block text-sm font-semibold text-cocoa underline-offset-4 hover:underline">
         Volver al catálogo
       </NuxtLink>
     </div>
