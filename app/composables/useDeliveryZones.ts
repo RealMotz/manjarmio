@@ -9,11 +9,8 @@ export type DeliveryZone = {
 export function useDeliveryZones() {
   const { $supabase } = useNuxtApp();
 
-  const getActive = async (): Promise<DeliveryZone[]> => {
-    const { data, error } = await $supabase
-      .from("delivery_zones")
-      .select("*")
-      .eq("is_active", true);
+  const getAll = async (): Promise<DeliveryZone[]> => {
+    const { data, error } = await $supabase.from("delivery_zones").select("*");
 
     if (error) throw error;
 
@@ -29,5 +26,5 @@ export function useDeliveryZones() {
       .sort((z1, z2) => z1.sort_order - z2.sort_order);
   };
 
-  return { getActive };
+  return { getAll };
 }

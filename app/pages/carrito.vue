@@ -10,22 +10,59 @@ const {
   subtotalCents,
   updateQuantity,
   removeItem,
+  clearCart,
 } = useCart();
 const deliveryZonesApi = useDeliveryZones();
+const deliverySchedule = useDeliverySchedule();
 
 const {
   data: deliveryZones,
   pending: deliveryZonesPending,
   error: deliveryZonesError,
-} = await useAsyncData("active-delivery-zones", () => deliveryZonesApi.getActive());
+} = await useAsyncData("active-delivery-zones", () => deliveryZonesApi.getAll());
+const activeZones = deliveryZones.value?.filter((zone) => zone.is_active == true);
+const pickup = deliveryZones.value?.at(0);
 
 const fulfillment = ref<Fulfillment>("pickup");
 const selectedZoneId = ref<string | null>(null);
 const checkoutMessage = ref("");
 const contactName = ref("");
 const phone = ref("");
+const email = ref("");
 const address = ref("");
 const notes = ref("");
+const deliveryDate = ref("");
+const deliveryTime = ref("");
+
+const deliveryDateOptions = computed(() => deliverySchedule.getDeliveryDateOptions());
+const deliveryTimeOptions = deliverySchedule.deliveryTimeSlots;
+const workingHoursCutoffLabel = computed(() => {
+  const { hours, minutes } = deliverySchedule.workingHours.end;
+  const reference = new Date();
+  reference.setHours(hours, minutes, 0, 0);
+  return reference.toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" });
+});
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+watch(
+  deliveryDateOptions,
+  (options) => {
+    if (!options.some((option) => option.value === deliveryDate.value)) {
+      deliveryDate.value = options[0]?.value ?? "";
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  deliveryTimeOptions,
+  (options) => {
+    if (!options.some((option) => option.value === deliveryTime.value)) {
+      deliveryTime.value = options[0]?.value ?? "";
+    }
+  },
+  { immediate: true },
+);
 
 const selectedZone = computed(
   () => deliveryZones.value?.find((zone) => zone.id === selectedZoneId.value) ?? null,
@@ -35,30 +72,62 @@ const deliveryFeeCents = computed(() =>
 );
 const totalCents = computed(() => subtotalCents.value + deliveryFeeCents.value);
 const requiresZone = computed(
-  () => fulfillment.value === "delivery" && (deliveryZones.value?.length ?? 0) > 0,
+  () => fulfillment.value === "delivery" && (activeZones?.length ?? 0) > 0,
 );
 const isCheckoutReady = computed(
   () =>
     items.value.length > 0 &&
     contactName.value.trim().length > 1 &&
     phone.value.trim().length > 5 &&
+    emailPattern.test(email.value.trim()) &&
     (fulfillment.value === "pickup" ||
-      (Boolean(selectedZone.value) && address.value.trim().length > 4)),
+      (Boolean(selectedZone.value) &&
+        address.value.trim().length > 4 &&
+        Boolean(deliveryDate.value) &&
+        Boolean(deliveryTime.value))),
 );
 
 watch(fulfillment, () => {
   checkoutMessage.value = "";
 });
 
-const preparePayment = () => {
+const orderApi = useOrders()
+const preparePayment = async () => {
   if (!isCheckoutReady.value) {
     checkoutMessage.value = "Completa tus datos y la forma de recibir el pedido para continuar.";
     return;
   }
 
+  const order: CartOrder = {
+    address: address.value,
+    delivery_fee_cents: deliveryFeeCents.value,
+    delivery_notes: notes.value,
+    email: email.value,
+    fulfillment_type: fulfillment.value,
+    name: contactName.value,
+    order_status: "new",
+    payment_status: "pending",
+    phone: phone.value,
+    total_cents: totalCents.value,
+    zone_id: fulfillment.value == "delivery" ? selectedZone.value?.id : pickup?.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
+  // Create order
+  const { error } = await orderApi.createOrder(order);
+  if (error) {
+    checkoutMessage.value = error.message()
+    return
+  }
+
   checkoutMessage.value =
-    "Tu pedido está listo para pagar. La conexión con Wompi se habilitará aquí próximamente; todavía no se ha creado ningún cobro.";
+    "Tu pedido está listo para pagar. Continua con el proceso en Whatsup";
+
+  // TODO: Format all information collected and send a message to manjarmio whatsup business account
+  clearCart()
 };
+
 </script>
 
 <template>
@@ -114,7 +183,7 @@ const preparePayment = () => {
                       :aria-label="`Quitar una unidad de ${item.name}`"
                       @click="updateQuantity(item.id, item.quantity - 1)">−</button>
                     <span class="grid h-8 min-w-8 place-items-center font-mono text-xs text-espresso">{{ item.quantity
-                      }}</span>
+                    }}</span>
                     <button type="button"
                       class="grid h-8 w-8 place-items-center text-lg leading-none text-espresso/70 hover:text-espresso"
                       :aria-label="`Añadir una unidad de ${item.name}`"
@@ -174,7 +243,7 @@ const preparePayment = () => {
                 :disabled="deliveryZonesPending || Boolean(deliveryZonesError)"
                 class="mt-3 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20 disabled:cursor-not-allowed disabled:opacity-60">
                 <option :value="null">{{ deliveryZonesPending ? 'Cargando zonas…' : 'Selecciona tu zona' }}</option>
-                <option v-for="zone in deliveryZones" :key="zone.id" :value="zone.id">{{ zone.name }} · {{
+                <option v-for="zone in activeZones" :key="zone.id" :value="zone.id">{{ zone.name }} · {{
                   formatCOP(zone.fee_cents) }}</option>
               </select>
               <p v-if="deliveryZonesError" class="mt-3 text-sm text-red-800">No pudimos consultar las zonas de entrega.
@@ -204,11 +273,35 @@ const preparePayment = () => {
                   class="mt-2 w-full rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
               </label>
             </div>
+
+            <label class="block text-sm font-semibold text-espresso sm:col-span-2">Correo electrónico
+              <input v-model="email" type="email" required autocomplete="email" placeholder="tucorreo@ejemplo.com"
+                class="mt-2 w-full rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
+            </label>
+            <div class="mt-5 grid gap-4 sm:grid-cols-2">
+              <label for="delivery-date" class="block text-sm font-semibold text-espresso">Fecha de entrega
+                <select id="delivery-date" v-model="deliveryDate" :required="fulfillment === 'delivery'"
+                  class="mt-2 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm font-normal capitalize text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20">
+                  <option v-for="option in deliveryDateOptions" :key="option.value" :value="option.value">{{
+                    option.label }}</option>
+                </select>
+              </label>
+              <label for="delivery-time" class="block text-sm font-semibold text-espresso">Hora estimada de entrega
+                <select id="delivery-time" v-model="deliveryTime" :required="fulfillment === 'delivery'"
+                  class="mt-2 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm font-normal text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20">
+                  <option v-for="option in deliveryTimeOptions" :key="option.value" :value="option.value">{{
+                    option.label }}</option>
+                </select>
+              </label>
+            </div>
+            <p class="mt-2 text-xs text-espresso/55">Los pedidos hechos antes de las {{ workingHoursCutoffLabel }} se
+              entregan al día siguiente; después de esa hora, la entrega más pronta es dos días después.</p>
             <label class="mt-4 block text-sm font-semibold text-espresso">Notas para tu pedido <span
                 class="font-normal text-espresso/45">(opcional)</span>
               <textarea v-model="notes" rows="2" placeholder="Por ejemplo, hora ideal para recoger"
                 class="mt-2 w-full resize-y rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
             </label>
+
           </section>
 
           <button type="submit"
@@ -230,7 +323,7 @@ const preparePayment = () => {
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>Productos</span><span>{{
               formatCOP(subtotalCents) }}</span></div>
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>{{ fulfillment === 'pickup' ? 'Recogida' :
-                'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : selectedZone ?
+              'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : selectedZone ?
                   formatCOP(deliveryFeeCents) : 'Por definir' }}</span></div>
           </div>
           <div class="mt-5 border-t border-mascarpone/20 pt-5">
