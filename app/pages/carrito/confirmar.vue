@@ -111,7 +111,7 @@ const confirmOrder = async () => {
     notes: notes.value || undefined,
   });
 
-  whatsappUrl.value = buildWhatsappLink(config.public.whatsappBusinessNumber, message);
+  whatsappUrl.value = buildWhatsappLink(config.public.whatsappBusinessNumber.toString(), message);
   openWhatsapp(whatsappUrl.value);
 
   clearCart();
