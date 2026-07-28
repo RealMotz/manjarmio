@@ -91,7 +91,7 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
     <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div class="grid gap-8 rounded-3xl bg-botanical p-8 text-mascarpone sm:grid-cols-3 sm:p-12">
             <div>
-                <p class="font-mono text-3xl font-semibold text-mascarpone">4</p>
+                <p class="font-mono text-3xl font-semibold text-mascarpone">5</p>
                 <p class="mt-1 text-sm text-mascarpone/70">
                     Sabores permanentes
                 </p>
@@ -104,10 +104,10 @@ const seasonal = products.value.filter((product) => isSeasonal(product));
             </div>
             <div>
                 <p class="font-mono text-3xl font-semibold text-mascarpone">
-                    Nequi
+                    Transferencia
                 </p>
                 <p class="mt-1 text-sm text-mascarpone/70">
-                    Transferencia · Llave
+                    Llave · Nequi
                 </p>
             </div>
         </div>

@@ -1,63 +1,65 @@
 <script setup lang="ts">
 import { formatCOP } from "~/utils/currency";
 
-type Fulfillment = "pickup" | "delivery";
-
 const config = useRuntimeConfig();
-const {
-  items,
-  hasHydrated,
-  subtotalCents,
-  updateQuantity,
-  removeItem,
-} = useCart();
-const deliveryZonesApi = useDeliveryZones();
+const { items, hasHydrated, subtotalCents, updateQuantity, removeItem } = useCart();
 
 const {
-  data: deliveryZones,
-  pending: deliveryZonesPending,
-  error: deliveryZonesError,
-} = await useAsyncData("active-delivery-zones", () => deliveryZonesApi.getActive());
+  deliveryZonesPending,
+  deliveryZonesError,
+  activeZones,
+  fulfillment,
+  selectedZoneId,
+  contactName,
+  phone,
+  email,
+  address,
+  notes,
+  deliveryDate,
+  deliveryTime,
+  selectedZone,
+  deliveryFeeCents,
+  totalCents,
+  requiresZone,
+  isCheckoutReady,
+  deliveryDateOptions,
+  deliveryTimeOptions,
+  workingHoursEndLabel,
+} = await useCheckoutSummary();
 
-const fulfillment = ref<Fulfillment>("pickup");
-const selectedZoneId = ref<string | null>(null);
 const checkoutMessage = ref("");
-const contactName = ref("");
-const phone = ref("");
-const address = ref("");
-const notes = ref("");
 
-const selectedZone = computed(
-  () => deliveryZones.value?.find((zone) => zone.id === selectedZoneId.value) ?? null,
+watch(
+  deliveryDateOptions,
+  (options) => {
+    if (!options.some((option) => option.value === deliveryDate.value)) {
+      deliveryDate.value = options[0]?.value ?? "";
+    }
+  },
+  { immediate: true },
 );
-const deliveryFeeCents = computed(() =>
-  fulfillment.value === "delivery" ? selectedZone.value?.fee_cents ?? 0 : 0,
-);
-const totalCents = computed(() => subtotalCents.value + deliveryFeeCents.value);
-const requiresZone = computed(
-  () => fulfillment.value === "delivery" && (deliveryZones.value?.length ?? 0) > 0,
-);
-const isCheckoutReady = computed(
-  () =>
-    items.value.length > 0 &&
-    contactName.value.trim().length > 1 &&
-    phone.value.trim().length > 5 &&
-    (fulfillment.value === "pickup" ||
-      (Boolean(selectedZone.value) && address.value.trim().length > 4)),
+
+watch(
+  deliveryTimeOptions,
+  (options) => {
+    if (!options.some((option) => option.value === deliveryTime.value)) {
+      deliveryTime.value = options[0]?.value ?? "";
+    }
+  },
+  { immediate: true },
 );
 
 watch(fulfillment, () => {
   checkoutMessage.value = "";
 });
 
-const preparePayment = () => {
-  if (!isCheckoutReady.value) {
+const goToConfirmation = async () => {
+  if (items.value.length === 0 || !isCheckoutReady.value) {
     checkoutMessage.value = "Completa tus datos y la forma de recibir el pedido para continuar.";
     return;
   }
 
-  checkoutMessage.value =
-    "Tu pedido está listo para pagar. La conexión con Wompi se habilitará aquí próximamente; todavía no se ha creado ningún cobro.";
+  await navigateTo("/carrito/confirmar");
 };
 </script>
 
@@ -131,7 +133,7 @@ const preparePayment = () => {
           </ul>
         </section>
 
-        <form class="space-y-8" @submit.prevent="preparePayment">
+        <form class="space-y-8" @submit.prevent="goToConfirmation">
           <section aria-labelledby="delivery-title">
             <div class="flex items-baseline justify-between gap-4">
               <h2 id="delivery-title" class="font-display text-2xl font-semibold text-espresso">Cómo lo recibes</h2>
@@ -174,7 +176,7 @@ const preparePayment = () => {
                 :disabled="deliveryZonesPending || Boolean(deliveryZonesError)"
                 class="mt-3 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20 disabled:cursor-not-allowed disabled:opacity-60">
                 <option :value="null">{{ deliveryZonesPending ? 'Cargando zonas…' : 'Selecciona tu zona' }}</option>
-                <option v-for="zone in deliveryZones" :key="zone.id" :value="zone.id">{{ zone.name }} · {{
+                <option v-for="zone in activeZones" :key="zone.id" :value="zone.id">{{ zone.name }} · {{
                   formatCOP(zone.fee_cents) }}</option>
               </select>
               <p v-if="deliveryZonesError" class="mt-3 text-sm text-red-800">No pudimos consultar las zonas de entrega.
@@ -204,17 +206,41 @@ const preparePayment = () => {
                   class="mt-2 w-full rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
               </label>
             </div>
+
+            <label class="block text-sm font-semibold text-espresso sm:col-span-2">Correo electrónico
+              <input v-model="email" type="email" required autocomplete="email" placeholder="tucorreo@ejemplo.com"
+                class="mt-2 w-full rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
+            </label>
+            <div class="mt-5 grid gap-4 sm:grid-cols-2">
+              <label for="delivery-date" class="block text-sm font-semibold text-espresso">Fecha de entrega
+                <select id="delivery-date" v-model="deliveryDate" :required="fulfillment === 'delivery'"
+                  class="mt-2 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm font-normal capitalize text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20">
+                  <option v-for="option in deliveryDateOptions" :key="option.value" :value="option.value">{{
+                    option.label }}</option>
+                </select>
+              </label>
+              <label for="delivery-time" class="block text-sm font-semibold text-espresso">Hora estimada de entrega
+                <select id="delivery-time" v-model="deliveryTime" :required="fulfillment === 'delivery'"
+                  class="mt-2 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm font-normal text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20">
+                  <option v-for="option in deliveryTimeOptions" :key="option.value" :value="option.value">{{
+                    option.label }}</option>
+                </select>
+              </label>
+            </div>
+            <p class="mt-2 text-xs text-espresso/55">Los pedidos hechos antes de las {{ workingHoursEndLabel }} se
+              entregan al día siguiente; después de esa hora, la entrega más pronta es dos días después.</p>
             <label class="mt-4 block text-sm font-semibold text-espresso">Notas para tu pedido <span
                 class="font-normal text-espresso/45">(opcional)</span>
               <textarea v-model="notes" rows="2" placeholder="Por ejemplo, hora ideal para recoger"
                 class="mt-2 w-full resize-y rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
             </label>
+
           </section>
 
           <button type="submit"
             class="w-full rounded-full bg-espresso px-6 py-4 text-sm font-semibold text-mascarpone transition-colors hover:bg-cocoa focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cocoa disabled:cursor-not-allowed disabled:bg-espresso/40"
             :disabled="items.length === 0">
-            Continuar al pago
+            Confirmar pedido
           </button>
           <p v-if="checkoutMessage" class="rounded-2xl bg-saffron/20 px-4 py-3 text-sm leading-relaxed text-espresso"
             aria-live="polite">{{ checkoutMessage }}</p>
@@ -230,7 +256,7 @@ const preparePayment = () => {
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>Productos</span><span>{{
               formatCOP(subtotalCents) }}</span></div>
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>{{ fulfillment === 'pickup' ? 'Recogida' :
-                'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : selectedZone ?
+              'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : selectedZone ?
                   formatCOP(deliveryFeeCents) : 'Por definir' }}</span></div>
           </div>
           <div class="mt-5 border-t border-mascarpone/20 pt-5">
@@ -239,8 +265,8 @@ const preparePayment = () => {
           </div>
         </div>
         <div class="strata-divider" />
-        <p class="px-6 py-4 text-xs leading-relaxed text-mascarpone/65">El pago seguro con Wompi se conectará en el
-          siguiente paso.</p>
+        <p class="px-6 py-4 text-xs leading-relaxed text-mascarpone/65">Coordinamos el pago por WhatsApp directamente
+          con Manjarmío en el siguiente paso.</p>
       </aside>
     </div>
 
