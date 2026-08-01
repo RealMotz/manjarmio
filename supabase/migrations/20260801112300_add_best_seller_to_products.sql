@@ -1,0 +1,1 @@
+ALTER TABLE "public"."products" ADD COLUMN "best_seller" boolean DEFAULT false NOT NULL;
