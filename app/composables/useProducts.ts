@@ -7,6 +7,7 @@ export type Product = {
   image_url?: string | null;
   is_seasonal?: boolean | string;
   is_active: boolean;
+  best_seller: boolean;
 };
 
 export function useProducts() {

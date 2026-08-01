@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       order_items: {
@@ -137,6 +112,7 @@ export type Database = {
       }
       products: {
         Row: {
+          best_seller: boolean
           created_at: string
           description: string
           id: string
@@ -150,6 +126,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          best_seller?: boolean
           created_at?: string
           description: string
           id?: string
@@ -163,6 +140,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          best_seller?: boolean
           created_at?: string
           description?: string
           id?: string
@@ -192,7 +170,6 @@ export type Database = {
           p_items?: Json
           p_name: string
           p_phone: string
-          p_zone_id: string
         }
         Returns: string
       }
@@ -200,7 +177,6 @@ export type Database = {
     Enums: {
       fulfillment_type: "delivery" | "pickup"
       order_status: "new" | "preparing" | "delivered" | "cancelled"
-      payment_status: "pending" | "approved" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -326,14 +302,10 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       fulfillment_type: ["delivery", "pickup"],
       order_status: ["new", "preparing", "delivered", "cancelled"],
-      payment_status: ["pending", "approved", "declined"],
     },
   },
 } as const

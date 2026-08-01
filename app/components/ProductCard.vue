@@ -12,6 +12,9 @@ const added = ref(false);
 const isSeasonal = computed(() =>
     props.product.is_seasonal === true || props.product.is_seasonal === 'true',
 );
+const isBestSeller = computed(() =>
+    props.product.best_seller === true,
+);
 
 const addToCart = () => {
     addProduct(props.product);
@@ -38,6 +41,10 @@ const addToCart = () => {
                 <span v-if="isSeasonal"
                     class="absolute left-3 top-3 rounded-full bg-saffron px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-espresso">
                     Temporada
+                </span>
+                <span v-if="isBestSeller"
+                    class="absolute left-3 top-3 rounded-full bg-saffron border border-mascarpone px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-mascarpone">
+                    Best Seller
                 </span>
             </div>
         </NuxtLink>
