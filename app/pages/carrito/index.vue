@@ -5,11 +5,7 @@ const config = useRuntimeConfig();
 const { items, hasHydrated, subtotalCents, updateQuantity, removeItem } = useCart();
 
 const {
-  deliveryZonesPending,
-  deliveryZonesError,
-  activeZones,
   fulfillment,
-  selectedZoneId,
   contactName,
   phone,
   email,
@@ -17,17 +13,17 @@ const {
   notes,
   deliveryDate,
   deliveryTime,
-  selectedZone,
-  deliveryFeeCents,
   totalCents,
-  requiresZone,
   isCheckoutReady,
   deliveryDateOptions,
   deliveryTimeOptions,
   workingHoursEndLabel,
+  pickupLocation,
 } = await useCheckoutSummary();
 
 const checkoutMessage = ref("");
+const locationOptions = [config.public.pickupAddress, config.public.pickupAddress2]
+pickupLocation.value = locationOptions[0] ?? "";
 
 watch(
   deliveryDateOptions,
@@ -116,7 +112,7 @@ const goToConfirmation = async () => {
                       :aria-label="`Quitar una unidad de ${item.name}`"
                       @click="updateQuantity(item.id, item.quantity - 1)">−</button>
                     <span class="grid h-8 min-w-8 place-items-center font-mono text-xs text-espresso">{{ item.quantity
-                      }}</span>
+                    }}</span>
                     <button type="button"
                       class="grid h-8 w-8 place-items-center text-lg leading-none text-espresso/70 hover:text-espresso"
                       :aria-label="`Añadir una unidad de ${item.name}`"
@@ -170,24 +166,20 @@ const goToConfirmation = async () => {
 
             <div v-if="fulfillment === 'delivery'"
               class="mt-4 rounded-2xl border border-espresso/10 bg-white/45 p-4 sm:p-5">
-              <label for="delivery-zone" class="block text-sm font-semibold text-espresso">Zona de entrega</label>
-              <p class="mt-1 text-xs text-espresso/60">Solo mostramos zonas disponibles actualmente.</p>
-              <select id="delivery-zone" v-model="selectedZoneId"
-                :disabled="deliveryZonesPending || Boolean(deliveryZonesError)"
-                class="mt-3 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20 disabled:cursor-not-allowed disabled:opacity-60">
-                <option :value="null">{{ deliveryZonesPending ? 'Cargando zonas…' : 'Selecciona tu zona' }}</option>
-                <option v-for="zone in activeZones" :key="zone.id" :value="zone.id">{{ zone.name }} · {{
-                  formatCOP(zone.fee_cents) }}</option>
-              </select>
-              <p v-if="deliveryZonesError" class="mt-3 text-sm text-red-800">No pudimos consultar las zonas de entrega.
-                Puedes elegir recoger tu pedido.</p>
-              <p v-else-if="!deliveryZonesPending && !requiresZone" class="mt-3 text-sm text-espresso/65">Por ahora no
-                hay zonas de envío disponibles. Puedes recoger sin costo.</p>
-
-              <label for="address" class="mt-5 block text-sm font-semibold text-espresso">Dirección de entrega</label>
+              <label for="address" class="block text-sm font-semibold text-espresso">Dirección de entrega</label>
               <textarea id="address" v-model="address" rows="2" :required="fulfillment === 'delivery'"
                 placeholder="Barrio, dirección y referencias"
                 class="mt-2 w-full resize-y rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm text-espresso outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
+            </div>
+
+            <div v-if="fulfillment === 'pickup'"
+              class="mt-4 rounded-2xl border border-espresso/10 bg-white/45 p-4 sm:p-5">
+              <label for="delivery-time" class="block text-sm font-semibold text-espresso">Lugar de recogida
+                <select id="delivery-time" v-model="pickupLocation" :required="fulfillment === 'pickup'"
+                  class="mt-2 w-full rounded-xl border border-espresso/15 bg-white px-3 py-3 text-sm font-normal text-espresso outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/20">
+                  <option v-for="option in locationOptions" :key="option" :value="option">{{ option }}</option>
+                </select>
+              </label>
             </div>
           </section>
 
@@ -256,8 +248,7 @@ const goToConfirmation = async () => {
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>Productos</span><span>{{
               formatCOP(subtotalCents) }}</span></div>
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>{{ fulfillment === 'pickup' ? 'Recogida' :
-              'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : selectedZone ?
-                  formatCOP(deliveryFeeCents) : 'Por definir' }}</span></div>
+              'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : 'Por definir' }}</span></div>
           </div>
           <div class="mt-5 border-t border-mascarpone/20 pt-5">
             <div class="flex items-end justify-between gap-4"><span class="font-semibold">Total</span><span
