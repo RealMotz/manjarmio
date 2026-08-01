@@ -14,11 +14,9 @@ export type CartOrder = {
   fulfillment_type: FullfilmentType;
   name: string;
   order_status: OrderStatus;
-  payment_status: PaymentStatus;
   phone: string;
   total_cents: number;
   updated_at: string;
-  zone_id: string | undefined;
   items: CartItem[];
 };
 
@@ -38,7 +36,6 @@ export function useOrders() {
       p_address: order.address,
       p_delivery_notes: order.delivery_notes,
       p_delivery_fee_cents: order.delivery_fee_cents,
-      p_zone_id: order.zone_id,
       p_items: order.items.map((i) => ({
         product_id: i.id,
         product_name: i.name,

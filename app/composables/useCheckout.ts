@@ -1,8 +1,12 @@
 export type Fulfillment = "pickup" | "delivery";
 
 export function useCheckout() {
-  const fulfillment = useState<Fulfillment>("checkout-fulfillment", () => "pickup");
-  const selectedZoneId = useState<string | null>("checkout-zone-id", () => null);
+  const fulfillment = useState<Fulfillment>(
+    "checkout-fulfillment",
+    () => "pickup",
+  );
+
+  const pickupLocation = useState("checkout-location", () => "");
   const contactName = useState("checkout-contact-name", () => "");
   const phone = useState("checkout-phone", () => "");
   const email = useState("checkout-email", () => "");
@@ -13,7 +17,6 @@ export function useCheckout() {
 
   const resetCheckout = () => {
     fulfillment.value = "pickup";
-    selectedZoneId.value = null;
     contactName.value = "";
     phone.value = "";
     email.value = "";
@@ -25,7 +28,6 @@ export function useCheckout() {
 
   return {
     fulfillment,
-    selectedZoneId,
     contactName,
     phone,
     email,
@@ -33,6 +35,7 @@ export function useCheckout() {
     notes,
     deliveryDate,
     deliveryTime,
+    pickupLocation,
     resetCheckout,
   };
 }

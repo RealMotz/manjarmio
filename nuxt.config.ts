@@ -11,6 +11,9 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     // The private keys which are only available within server-side
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    adminPassword: process.env.ADMIN_PASSWORD,
+    sessionPassword: process.env.NUXT_SESSION_PASSWORD,
 
     // Keys within public, will be also exposed to the client-side
     public: {
