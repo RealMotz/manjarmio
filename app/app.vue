@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import Header from './components/AppHeader.vue';
-import Footer from './components/AppFooter.vue';
-
 useHead({
   bodyAttrs: {
     class: 'flex min-h-full flex-col'
@@ -11,9 +8,7 @@ useHead({
 </script>
 
 <template>
-  <div>
-    <Header />
+  <NuxtLayout>
     <NuxtPage />
-    <Footer />
-  </div>
+  </NuxtLayout>
 </template>

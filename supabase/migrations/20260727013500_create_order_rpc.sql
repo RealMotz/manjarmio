@@ -3,7 +3,6 @@ create or replace function create_order(
   p_name text,
   p_phone text,
   p_fulfillment_type fulfillment_type,
-  p_zone_id uuid,
   p_address text default null,
   p_delivery_notes text default null,
   p_delivery_fee_cents int default 0,
@@ -33,13 +32,13 @@ begin
 
   insert into orders (
     user_id, email, name, phone, fulfillment_type,
-    address, delivery_notes, delivery_fee_cents, zone_id,
+    address, delivery_notes, delivery_fee_cents,
     total_cents
   )
   values (
     auth.uid(), p_email, p_name, p_phone, p_fulfillment_type,
-    p_address, p_delivery_notes, p_delivery_fee_cents, p_zone_id,
-    v_items_total_cents + p_delivery_fee_cents
+    p_address, p_delivery_notes, p_delivery_fee_cents,
+    v_items_total_cents
   )
   returning id into v_order_id;
 
@@ -51,13 +50,9 @@ begin
     (item->>'product_id')::uuid,
     item->>'product_name',
     (item->>'quantity')::int,
-    (item->>'unit_price_cents')::int,
+    (item->>'unit_price_cents')::int
   from jsonb_array_elements(p_items) as item;
 
   return v_order_id;
 end;
 $$;
-
-grant execute on function create_order(
-  text, text, text, fulfillment_type, uuid, text, text, int, jsonb
-) to authenticated;

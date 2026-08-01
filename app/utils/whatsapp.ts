@@ -11,12 +11,10 @@ export type WhatsappFulfillmentDetails =
   | {
       type: "pickup";
       address: string | null;
-      address2: string | null;
       hours: string | null;
     }
   | {
       type: "delivery";
-      zoneName: string;
       address: string;
       dateLabel: string;
       timeLabel: string;
@@ -27,7 +25,6 @@ export type WhatsappOrderSummary = {
   items: WhatsappOrderItem[];
   fulfillment: WhatsappFulfillmentDetails;
   subtotalCents: number;
-  deliveryFeeCents: number;
   totalCents: number;
   contactName: string;
   phone: string;
@@ -56,12 +53,10 @@ export function buildWhatsappOrderMessage(
     lines.push("*Forma de entrega:* Recoger en tienda");
     if (summary.fulfillment.address)
       lines.push(`📍 ${summary.fulfillment.address}`);
-    if (summary.fulfillment.address2) lines.push(summary.fulfillment.address2);
     if (summary.fulfillment.hours)
       lines.push(`🕐 ${summary.fulfillment.hours}`);
   } else {
     lines.push("*Forma de entrega:* Envío a domicilio");
-    lines.push(`📍 Zona: ${summary.fulfillment.zoneName}`);
     lines.push(`🏠 ${summary.fulfillment.address}`);
     lines.push(`📅 ${summary.fulfillment.dateLabel}`);
     lines.push(`🕐 ${summary.fulfillment.timeLabel}`);
@@ -71,9 +66,11 @@ export function buildWhatsappOrderMessage(
   lines.push("*Resumen:*");
   lines.push(`Subtotal: ${formatCOP(summary.subtotalCents)}`);
   lines.push(
-    `Domicilio: ${summary.deliveryFeeCents > 0 ? formatCOP(summary.deliveryFeeCents) : "Sin costo"}`,
+    `Domicilio: ${summary.fulfillment.type === "delivery" ? "Por definir" : "Sin costo"}`,
   );
-  lines.push(`*Total: ${formatCOP(summary.totalCents)}*`);
+  lines.push(
+    `*Total: ${formatCOP(summary.totalCents)}* ${summary.fulfillment.type === "delivery" ? "+ *domicilio*" : ""}`,
+  );
   lines.push("");
 
   lines.push("*Datos de contacto:*");

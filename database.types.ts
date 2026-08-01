@@ -39,30 +39,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      delivery_zones: {
-        Row: {
-          fee_cents: number
-          id: string
-          is_active: boolean
-          name: string
-          sort_order: number
-        }
-        Insert: {
-          fee_cents: number
-          id?: string
-          is_active?: boolean
-          name: string
-          sort_order?: number
-        }
-        Update: {
-          fee_cents?: number
-          id?: string
-          is_active?: boolean
-          name?: string
-          sort_order?: number
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string
@@ -122,13 +98,10 @@ export type Database = {
           id: string
           name: string
           order_status: Database["public"]["Enums"]["order_status"]
-          payment_method: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"]
           phone: string
           total_cents: number
           updated_at: string
           user_id: string
-          zone_id: string | null
         }
         Insert: {
           address?: string | null
@@ -140,13 +113,10 @@ export type Database = {
           id?: string
           name: string
           order_status?: Database["public"]["Enums"]["order_status"]
-          payment_method?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"]
           phone: string
           total_cents: number
           updated_at?: string
           user_id?: string
-          zone_id?: string | null
         }
         Update: {
           address?: string | null
@@ -158,23 +128,12 @@ export type Database = {
           id?: string
           name?: string
           order_status?: Database["public"]["Enums"]["order_status"]
-          payment_method?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"]
           phone?: string
           total_cents?: number
           updated_at?: string
           user_id?: string
-          zone_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "orders_zone_id_delivery_zones_id_fk"
-            columns: ["zone_id"]
-            isOneToOne: false
-            referencedRelation: "delivery_zones"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       products: {
         Row: {
@@ -223,11 +182,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_order: {
+        Args: {
+          p_address?: string
+          p_delivery_fee_cents?: number
+          p_delivery_notes?: string
+          p_email: string
+          p_fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
+          p_items?: Json
+          p_name: string
+          p_phone: string
+          p_zone_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       fulfillment_type: "delivery" | "pickup"
-      order_status: "new" | "preparing" | "ready" | "delivered" | "cancelled"
+      order_status: "new" | "preparing" | "delivered" | "cancelled"
       payment_status: "pending" | "approved" | "declined"
     }
     CompositeTypes: {
@@ -360,7 +332,7 @@ export const Constants = {
   public: {
     Enums: {
       fulfillment_type: ["delivery", "pickup"],
-      order_status: ["new", "preparing", "ready", "delivered", "cancelled"],
+      order_status: ["new", "preparing", "delivered", "cancelled"],
       payment_status: ["pending", "approved", "declined"],
     },
   },

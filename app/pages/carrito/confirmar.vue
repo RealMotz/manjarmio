@@ -6,7 +6,6 @@ const config = useRuntimeConfig();
 const { items, subtotalCents, clearCart } = useCart();
 
 const {
-  pickup,
   fulfillment,
   contactName,
   phone,
@@ -15,12 +14,11 @@ const {
   notes,
   deliveryDate,
   deliveryTime,
-  selectedZone,
-  deliveryFeeCents,
   totalCents,
   isCheckoutReady,
   deliveryDateOptions,
   deliveryTimeOptions,
+  pickupLocation,
   workingHoursStartLabel,
   workingHoursEndLabel,
   resetCheckout,
@@ -34,13 +32,11 @@ const fulfillmentDetails = computed<WhatsappFulfillmentDetails>(() =>
   fulfillment.value === "pickup"
     ? {
       type: "pickup",
-      address: config.public.pickupAddress ?? null,
-      address2: config.public.pickupAddress2 ?? null,
+      address: pickupLocation.value,
       hours: config.public.pickupHours ?? null,
     }
     : {
       type: "delivery",
-      zoneName: selectedZone.value?.name ?? "",
       address: address.value,
       dateLabel: deliveryDateOptions.value.find((option) => option.value === deliveryDate.value)?.label ?? deliveryDate.value,
       timeLabel: deliveryTimeOptions.value.find((option) => option.value === deliveryTime.value)?.label ?? deliveryTime.value,
@@ -68,16 +64,14 @@ const confirmOrder = async () => {
 
   const order: CartOrder = {
     address: address.value,
-    delivery_fee_cents: deliveryFeeCents.value,
+    delivery_fee_cents: 0,
     delivery_notes: notes.value,
     email: email.value,
     fulfillment_type: fulfillment.value,
     name: contactName.value,
     order_status: "new",
-    payment_status: "pending",
     phone: phone.value,
     total_cents: totalCents.value,
-    zone_id: fulfillment.value === "delivery" ? selectedZone.value?.id : pickup?.id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     items: items.value,
@@ -103,7 +97,6 @@ const confirmOrder = async () => {
     })),
     fulfillment: fulfillmentDetails.value,
     subtotalCents: subtotalCents.value,
-    deliveryFeeCents: deliveryFeeCents.value,
     totalCents: totalCents.value,
     contactName: contactName.value,
     phone: phone.value,
@@ -153,11 +146,10 @@ const confirmOrder = async () => {
         <div v-if="fulfillmentDetails.type === 'pickup'" class="mt-3 space-y-1 text-sm text-espresso/70">
           <p class="font-semibold text-espresso">Recoger en tienda</p>
           <p v-if="fulfillmentDetails.address">{{ fulfillmentDetails.address }}</p>
-          <p v-if="fulfillmentDetails.address2">{{ fulfillmentDetails.address2 }}</p>
           <p v-if="fulfillmentDetails.hours">{{ fulfillmentDetails.hours }}</p>
         </div>
         <div v-else class="mt-3 space-y-1 text-sm text-espresso/70">
-          <p class="font-semibold text-espresso">Envío a domicilio · {{ fulfillmentDetails.zoneName }}</p>
+          <p class="font-semibold text-espresso">Envío a domicilio (costo por definir)</p>
           <p>{{ fulfillmentDetails.address }}</p>
           <p><span class="capitalize">{{ fulfillmentDetails.dateLabel }}</span> · {{ fulfillmentDetails.timeLabel }}</p>
         </div>
@@ -182,7 +174,7 @@ const confirmOrder = async () => {
           </div>
           <div class="flex justify-between gap-4">
             <span>{{ fulfillment === 'pickup' ? 'Recogida' : 'Envío' }}</span>
-            <span>{{ fulfillment === 'pickup' ? 'Sin costo' : formatCOP(deliveryFeeCents) }}</span>
+            <span>{{ fulfillment === 'pickup' ? 'Sin costo' : "Por definir" }}</span>
           </div>
         </div>
         <div class="mt-4 flex items-end justify-between gap-4 border-t border-mascarpone/20 pt-4">
