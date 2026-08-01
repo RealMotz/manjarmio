@@ -3,7 +3,13 @@ export async function useCheckoutSummary() {
   const deliverySchedule = useDeliverySchedule();
   const checkout = useCheckout();
 
-  const totalCents = computed(() => subtotalCents.value);
+  const extrasCents = computed(() =>
+    checkout.selectedExtras.value.reduce((sum, id) => {
+      const extra = CHECKOUT_EXTRAS.find((option) => option.id === id);
+      return sum + (extra?.priceCents ?? 0);
+    }, 0),
+  );
+  const totalCents = computed(() => subtotalCents.value + extrasCents.value);
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isCheckoutReady = computed(
     () =>
@@ -38,6 +44,7 @@ export async function useCheckoutSummary() {
 
   return {
     totalCents,
+    extrasCents,
     isCheckoutReady,
     deliveryDateOptions,
     deliveryTimeOptions,

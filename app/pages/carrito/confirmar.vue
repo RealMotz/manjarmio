@@ -15,14 +15,21 @@ const {
   deliveryDate,
   deliveryTime,
   totalCents,
+  extrasCents,
   isCheckoutReady,
   deliveryDateOptions,
   deliveryTimeOptions,
   pickupLocation,
   workingHoursStartLabel,
   workingHoursEndLabel,
+  selectedExtras,
+  extraDetails,
   resetCheckout,
 } = await useCheckoutSummary();
+
+const selectedExtraOptions = computed(() =>
+  CHECKOUT_EXTRAS.filter((extra) => selectedExtras.value.includes(extra.id)),
+);
 
 if (items.value.length === 0 || !isCheckoutReady.value) {
   await navigateTo("/carrito");
@@ -62,10 +69,18 @@ const confirmOrder = async () => {
 
   submitting.value = true;
 
+  const extrasNoteLines = selectedExtraOptions.value.map((extra) => {
+    const detail = extraDetails.value[extra.id];
+    return detail ? `${extra.label}: ${detail}` : extra.label;
+  });
+  const deliveryNotes = [notes.value, ...extrasNoteLines]
+    .filter((line) => line && line.trim().length > 0)
+    .join(" | ");
+
   const order: CartOrder = {
     address: address.value,
     delivery_fee_cents: 0,
-    delivery_notes: notes.value,
+    delivery_notes: deliveryNotes || null,
     email: email.value,
     fulfillment_type: fulfillment.value,
     name: contactName.value,
@@ -102,6 +117,11 @@ const confirmOrder = async () => {
     phone: phone.value,
     email: email.value,
     notes: notes.value || undefined,
+    extras: selectedExtraOptions.value.map((extra) => ({
+      label: extra.label,
+      priceCents: extra.priceCents,
+      detail: extraDetails.value[extra.id] || undefined,
+    })),
   });
 
   whatsappUrl.value = buildWhatsappLink(config.public.whatsappBusinessNumber.toString(), message);
@@ -155,6 +175,17 @@ const confirmOrder = async () => {
         </div>
       </section>
 
+      <section v-if="selectedExtraOptions.length > 0" aria-labelledby="summary-extras-title"
+        class="rounded-3xl border border-espresso/10 bg-white/45 p-6 sm:p-7">
+        <h2 id="summary-extras-title" class="font-display text-xl font-semibold text-espresso">Extras</h2>
+        <ul class="mt-3 space-y-1 text-sm text-espresso/70">
+          <li v-for="extra in selectedExtraOptions" :key="extra.id">
+            <span class="font-semibold text-espresso">{{ extra.label }}</span> — {{ formatCOP(extra.priceCents) }}
+            <span v-if="extraDetails[extra.id]">({{ extraDetails[extra.id] }})</span>
+          </li>
+        </ul>
+      </section>
+
       <section aria-labelledby="summary-contact-title"
         class="rounded-3xl border border-espresso/10 bg-white/45 p-6 sm:p-7">
         <h2 id="summary-contact-title" class="font-display text-xl font-semibold text-espresso">Datos de contacto</h2>
@@ -175,6 +206,10 @@ const confirmOrder = async () => {
           <div class="flex justify-between gap-4">
             <span>{{ fulfillment === 'pickup' ? 'Recogida' : 'Envío' }}</span>
             <span>{{ fulfillment === 'pickup' ? 'Sin costo' : "Por definir" }}</span>
+          </div>
+          <div v-if="extrasCents > 0" class="flex justify-between gap-4">
+            <span>Extras</span>
+            <span>{{ formatCOP(extrasCents) }}</span>
           </div>
         </div>
         <div class="mt-4 flex items-end justify-between gap-4 border-t border-mascarpone/20 pt-4">
