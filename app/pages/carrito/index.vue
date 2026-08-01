@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatCOP } from "~/utils/currency";
+import type { ExtraId } from "~/composables/useCheckout";
 
 const config = useRuntimeConfig();
 const { items, hasHydrated, subtotalCents, updateQuantity, removeItem } = useCart();
@@ -14,12 +15,18 @@ const {
   deliveryDate,
   deliveryTime,
   totalCents,
+  extrasCents,
   isCheckoutReady,
   deliveryDateOptions,
   deliveryTimeOptions,
   workingHoursEndLabel,
   pickupLocation,
+  selectedExtras,
+  extraDetails,
+  toggleExtra,
 } = await useCheckoutSummary();
+
+const isExtraSelected = (id: ExtraId) => selectedExtras.value.includes(id);
 
 const checkoutMessage = ref("");
 const locationOptions = [config.public.pickupAddress, config.public.pickupAddress2]
@@ -229,6 +236,34 @@ const goToConfirmation = async () => {
 
           </section>
 
+          <section aria-labelledby="extras-title">
+            <h2 id="extras-title" class="font-display text-2xl font-semibold text-espresso">Extras para tu pedido</h2>
+            <p class="mt-1 text-sm text-espresso/60">¿Necesitas algo adicional?</p>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div v-for="extra in CHECKOUT_EXTRAS" :key="extra.id">
+                <button type="button" :aria-pressed="isExtraSelected(extra.id)"
+                  class="flex w-full flex-col items-center gap-2 rounded-2xl border bg-white/60 px-4 py-5 text-center transition-colors"
+                  :class="isExtraSelected(extra.id) ? 'border-cocoa bg-white ring-1 ring-cocoa/25' : 'border-espresso/15 hover:border-espresso/30'"
+                  @click="toggleExtra(extra.id)">
+                  <span class="grid h-10 w-10 place-items-center rounded-full bg-saffron text-lg text-mascarpone">{{
+                    extra.icon }}</span>
+                  <span class="font-semibold text-espresso">{{ extra.label }}</span>
+                  <span class="text-xs text-espresso/55">{{ extra.description }}</span>
+                </button>
+
+                <label v-if="isExtraSelected(extra.id)" class="mt-2 block text-xs font-semibold text-espresso">{{
+                  extra.inputLabel }}
+                  <textarea v-if="extra.inputType === 'textarea'" v-model="extraDetails[extra.id]" rows="2"
+                    :placeholder="extra.inputPlaceholder"
+                    class="mt-2 w-full resize-y rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
+                  <input v-else v-model="extraDetails[extra.id]" type="text" :placeholder="extra.inputPlaceholder"
+                    class="mt-2 w-full rounded-xl border border-espresso/15 bg-white/70 px-3 py-3 text-sm font-normal outline-none transition placeholder:text-espresso/35 focus:border-cocoa focus:ring-2 focus:ring-cocoa/20" />
+                </label>
+              </div>
+            </div>
+          </section>
+
           <button type="submit"
             class="w-full rounded-full bg-espresso px-6 py-4 text-sm font-semibold text-mascarpone transition-colors hover:bg-cocoa focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cocoa disabled:cursor-not-allowed disabled:bg-espresso/40"
             :disabled="items.length === 0">
@@ -249,6 +284,10 @@ const goToConfirmation = async () => {
               formatCOP(subtotalCents) }}</span></div>
             <div class="flex justify-between gap-4 text-mascarpone/75"><span>{{ fulfillment === 'pickup' ? 'Recogida' :
               'Envío' }}</span><span>{{ fulfillment === 'pickup' ? 'Sin costo' : 'Por definir' }}</span></div>
+            <div v-if="extrasCents > 0" class="flex justify-between gap-4 text-mascarpone/75">
+              <span>Extras</span><span>{{
+                formatCOP(extrasCents) }}</span>
+            </div>
           </div>
           <div class="mt-5 border-t border-mascarpone/20 pt-5">
             <div class="flex items-end justify-between gap-4"><span class="font-semibold">Total</span><span

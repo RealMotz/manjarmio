@@ -20,6 +20,12 @@ export type WhatsappFulfillmentDetails =
       timeLabel: string;
     };
 
+export type WhatsappOrderExtra = {
+  label: string;
+  priceCents: number;
+  detail?: string;
+};
+
 export type WhatsappOrderSummary = {
   orderId?: string;
   items: WhatsappOrderItem[];
@@ -30,6 +36,7 @@ export type WhatsappOrderSummary = {
   phone: string;
   email: string;
   notes?: string;
+  extras?: WhatsappOrderExtra[];
 };
 
 export function buildWhatsappOrderMessage(
@@ -63,11 +70,27 @@ export function buildWhatsappOrderMessage(
   }
   lines.push("");
 
+  if (summary.extras && summary.extras.length > 0) {
+    lines.push("*Extras:*");
+    for (const extra of summary.extras) {
+      const detail = extra.detail ? ` — ${extra.detail}` : "";
+      lines.push(`- ${extra.label} — ${formatCOP(extra.priceCents)}${detail}`);
+    }
+    lines.push("");
+  }
+
   lines.push("*Resumen:*");
   lines.push(`Subtotal: ${formatCOP(summary.subtotalCents)}`);
   lines.push(
     `Domicilio: ${summary.fulfillment.type === "delivery" ? "Por definir" : "Sin costo"}`,
   );
+  if (summary.extras && summary.extras.length > 0) {
+    const extrasTotalCents = summary.extras.reduce(
+      (sum, extra) => sum + extra.priceCents,
+      0,
+    );
+    lines.push(`Extras: ${formatCOP(extrasTotalCents)}`);
+  }
   lines.push(
     `*Total: ${formatCOP(summary.totalCents)}* ${summary.fulfillment.type === "delivery" ? "+ *domicilio*" : ""}`,
   );
