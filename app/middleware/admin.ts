@@ -1,12 +1,20 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/admin/login') return;
-
+  const requestFetch = useRequestFetch();
+  let authenticated: boolean;
   try {
-    const { authenticated } = await $fetch<{ authenticated: boolean }>('/api/admin/session');
-    if (!authenticated) {
-      return navigateTo('/admin/login');
-    }
+    ({ authenticated } = await requestFetch<{ authenticated: boolean }>(
+      "/api/admin/session",
+    ));
   } catch {
-    return navigateTo('/admin/login');
+    authenticated = false;
+  }
+
+  if (to.path === "/admin/login") {
+    if (authenticated) return navigateTo("/admin");
+    return;
+  }
+
+  if (!authenticated) {
+    return navigateTo("/admin/login");
   }
 });

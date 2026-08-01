@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const router = useRouter();
+const route = useRoute();
 const loggingOut = ref(false);
 
 const logout = async () => {
@@ -20,7 +21,7 @@ const logout = async () => {
                 <NuxtLink to="/admin" class="font-display text-xl tracking-tight text-mascarpone">
                     Manjarmio <span class="text-saffron">Admin</span>
                 </NuxtLink>
-                <button type="button" @click="logout" :disabled="loggingOut"
+                <button v-if="route.path !== '/admin/login'" type="button" @click="logout" :disabled="loggingOut"
                     class="rounded-full border border-mascarpone/30 px-4 py-1.5 text-xs font-semibold text-mascarpone/80 transition-colors hover:border-mascarpone hover:text-mascarpone disabled:opacity-50">
                     {{ loggingOut ? 'Saliendo...' : 'Cerrar sesión' }}
                 </button>
